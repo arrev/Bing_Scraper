@@ -10,14 +10,17 @@ class BingScraper():
     """
     This class handles querys to the bing search engine and returns information about the found entries.
     """
-    def __init__(self,pagination=False):
+    def __init__(self,pagination=False,output_file=False):
         """
         self.pagination -> Boolean of wether we need pagination or not
+        self.output_file -> Filename where the output will be stored as json. 
+                            If it's not specified the result urls will be printed
         self.results -> List of dictionaries, where each dictionary is an entry in bing.
                         It includes url,title and caption.
         """
 
         self.pagination = pagination
+        self.output_file = output_file
         self.results = []
 
         self.base_url = "https://www.bing.com/"
@@ -56,8 +59,11 @@ class BingScraper():
                 if response is None:
                     break
                 self.parse_response(response.text)
-        output_urls = [result["url"] for result in self.results]
-        print(output_urls)
+        if self.output_file:
+            self.store_output()
+        else:
+            output_urls = [result["url"] for result in self.results]
+            print(output_urls)
         return True
 
 
@@ -123,8 +129,14 @@ class BingScraper():
                 caption = caption.get_text()
 
             self.results.append({"title":title,"url":href, "caption":caption})
+    def store_output(self):
+        """
+        Stores the output as a json on the file specified in self.output_file
+        """
+        with open(self.output_file,"w",encoding="utf-8") as f:
+            f.write(json.dumps(self.results,indent=4))
 
 if __name__ == '__main__':
     #query = "enthec"
     query = 'filetype:pdf "test"'
-    BingScraper(pagination=True).scrape(query)
+    BingScraper(pagination=True,output_file="data/output.json").scrape(query)
