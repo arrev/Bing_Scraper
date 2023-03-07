@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+  bingscraper:
+    image: bingscraper
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - bingscraper_data:/app/data
+volumes:
+  bingscraper_data:
