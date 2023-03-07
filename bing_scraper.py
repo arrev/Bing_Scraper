@@ -10,12 +10,14 @@ class BingScraper():
     """
     This class handles querys to the bing search engine and returns information about the found entries.
     """
-    def __init__(self):
+    def __init__(self,pagination=False):
         """
+        self.pagination -> Boolean of wether we need pagination or not
         self.results -> List of dictionaries, where each dictionary is an entry in bing.
                         It includes url,title and caption.
         """
 
+        self.pagination = pagination
         self.results = []
 
         self.base_url = "https://www.bing.com/"
@@ -48,6 +50,12 @@ class BingScraper():
             return False
 
         self.parse_response(response.text)
+        if self.pagination:
+            for _ in range(100): # avoid infinite loops, limit is an arbitrary number
+                response = self.get_next_page(response.text)
+                if response is None:
+                    break
+                self.parse_response(response.text)
         output_urls = [result["url"] for result in self.results]
         print(output_urls)
         return True
@@ -84,6 +92,20 @@ class BingScraper():
                                 timeout=10)
         return response
 
+    def get_next_page(self,response):
+        """
+        Given a page of responses, retrieves the next page.
+        """
+        soup = BeautifulSoup(response,"html.parser")
+        next_page = soup.find("a",{"class":"sb_bp","title":"Next page"})
+        if next_page is None:
+            return None
+        next_page = next_page.get("href")
+        response =  requests.get(f"{self.base_url}{next_page}",
+                                 headers=self.headers,
+                                 timeout=10)
+        return response
+
     def parse_response(self,response):
         """
         Parses all the entries of a page of responses.
@@ -105,4 +127,4 @@ class BingScraper():
 if __name__ == '__main__':
     #query = "enthec"
     query = 'filetype:pdf "test"'
-    BingScraper().scrape(query)
+    BingScraper(pagination=True).scrape(query)
