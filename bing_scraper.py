@@ -46,6 +46,8 @@ class BingScraper():
         It returns True if the query has gone well and False if there are no results.
         """
 
+        print(f"Retrieving results for {query}")
+
         response = self.get_first_page(query)
         not_found = re.search(f"There are no results for\s*(?:<strong>)?{query}",response.text)
         if not_found:
@@ -54,6 +56,7 @@ class BingScraper():
 
         self.parse_response(response.text)
         if self.pagination:
+            print("Starting pagination")
             for _ in range(100): # avoid infinite loops, limit is an arbitrary number
                 response = self.get_next_page(response.text)
                 if response is None:
@@ -135,6 +138,8 @@ class BingScraper():
         """
         with open(self.output_file,"w",encoding="utf-8") as f:
             f.write(json.dumps(self.results,indent=4))
+
+        print(f"File saved in {self.output_file}")
 
 if __name__ == '__main__':
     #query = "enthec"
